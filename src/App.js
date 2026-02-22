@@ -3,7 +3,7 @@ import { SCALES } from './constants/notes';
 import { SOLO_COLOR } from './constants/colors';
 import { audioEngine } from './engine/audioEngine';
 import { metronomeEngine } from './engine/metronomeEngine';
-import { getScaleNotes, getHarmony } from './theory/harmony';
+import { getScaleNotes, getHarmony, buildChord, resolveAdaptiveSoloScale } from './theory/harmony';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import Fretboard from './components/Fretboard';
 import HarmonyPanel from './components/HarmonyPanel';
@@ -16,7 +16,7 @@ import Lbl from './components/ui/Lbl';
 const DEFAULT_STATE = {
   root:"A", scaleKey:"natural_minor", colorMode:"scale",
   labelMode:"note", chordExt:3,
-  showSoloLayer:false, soloScale:"minor_penta", soloLayerMode:"overlay",
+  showSoloLayer:false, soloFamily:"pentatonic", soloLayerMode:"overlay",
 };
 
 export default function App() {
@@ -29,7 +29,7 @@ export default function App() {
 
   // Прогрессия — сохраняем как индексы ступеней + привязка к тоника/гамма
   const [savedProgression, setSavedProgression] = useLocalStorage('progression', {
-    degrees: [], bars: [], root: null, scaleKey: null, chordExt: null,
+    degrees: [], bars: [], exts: [], root: null, scaleKey: null, chordExt: null,
   });
 
   const [activeSource, setActiveSource]       = useState(null);
@@ -42,7 +42,7 @@ export default function App() {
   const currentStepRef = useRef(0);
 
   const { root, scaleKey, colorMode, labelMode, chordExt,
-          showSoloLayer, soloScale, soloLayerMode } = st;
+          showSoloLayer, soloFamily, soloLayerMode } = st;
 
   const scaleNotes = useMemo(() => getScaleNotes(root, scaleKey), [root, scaleKey]);
   const harmony    = useMemo(() => getHarmony(root, scaleKey, chordExt), [root, scaleKey, chordExt]);
@@ -53,11 +53,15 @@ export default function App() {
     if (restoredRef.current) return;
     restoredRef.current = true;
     const sp = savedProgression;
-    if (sp.degrees.length > 0 && sp.root === root && sp.scaleKey === scaleKey && sp.chordExt === chordExt) {
+    if (sp.degrees.length > 0 && sp.root === root && sp.scaleKey === scaleKey) {
       const restored = sp.degrees.map((di, i) => {
-        const chord = harmony[di];
-        if (!chord) return null;
-        return { ...chord, bars: sp.bars[i] || 2 };
+        const baseChord = harmony[di];
+        if (!baseChord) return null;
+        const chordExt_i = sp.exts?.[i] || sp.chordExt || chordExt;
+        if (chordExt_i !== chordExt) {
+          return { ...buildChord(baseChord.root, baseChord.type, chordExt_i, baseChord.degree, baseChord.idx), bars: sp.bars[i] || 2 };
+        }
+        return { ...baseChord, bars: sp.bars[i] || 2 };
       }).filter(Boolean);
       if (restored.length > 0) {
         setProgression(restored);
@@ -72,9 +76,10 @@ export default function App() {
     if (progression.length > 0) {
       const degrees = progression.map(c => c.idx);
       const bars = progression.map(c => c.bars || 2);
-      setSavedProgression({ degrees, bars, root, scaleKey, chordExt });
+      const exts = progression.map(c => c.ext || chordExt);
+      setSavedProgression({ degrees, bars, exts, root, scaleKey, chordExt });
     } else {
-      setSavedProgression({ degrees: [], bars: [], root: null, scaleKey: null, chordExt: null });
+      setSavedProgression({ degrees: [], bars: [], exts: [], root: null, scaleKey: null, chordExt: null });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progression, root, scaleKey, chordExt]);
@@ -135,9 +140,14 @@ export default function App() {
   };
 
   const soloRoot  = activeChord ? activeChord.root : root;
+  const chordType = activeChord ? activeChord.type : "maj";
+  const effectiveSoloScale = useMemo(
+    () => resolveAdaptiveSoloScale(soloFamily, chordType),
+    [soloFamily, chordType]
+  );
   const soloNotes = useMemo(() =>
-    showSoloLayer ? getScaleNotes(soloRoot, soloScale) : [],
-    [showSoloLayer, soloRoot, soloScale]
+    showSoloLayer ? getScaleNotes(soloRoot, effectiveSoloScale) : [],
+    [showSoloLayer, soloRoot, effectiveSoloScale]
   );
 
   useEffect(() => { progressionRef.current = progression; }, [progression]);
@@ -223,7 +233,7 @@ export default function App() {
         <span style={{fontSize:11,color:"#939393"}}>
           {root} {SCALES[scaleKey] ? SCALES[scaleKey].name : ""}
           {activeChord ? <span style={{color:"#2dd4bf"}}> · {activeChord.name}</span> : null}
-          {showSoloLayer ? <span style={{color:SOLO_COLOR}}> · Solo: {soloRoot} {SCALES[soloScale] ? SCALES[soloScale].name : ""}</span> : null}
+          {showSoloLayer ? <span style={{color:SOLO_COLOR}}> · Solo: {soloRoot} {SCALES[effectiveSoloScale]?.name || ""}</span> : null}
         </span>
         <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:10}}>
           <button onClick={handleMuteToggle}
@@ -263,7 +273,7 @@ export default function App() {
           <Fretboard
             scaleNotes={soloNotes} chordNotes={chordNotes} chordRoot={chordRoot}
             soloNotes={[]} colorMode={colorMode} labelMode={labelMode} showSoloLayer={false}
-            label={"Соло-гамма: " + soloRoot + " " + (SCALES[soloScale] ? SCALES[soloScale].name : "")}
+            label={"Соло-гамма: " + soloRoot + " " + (SCALES[effectiveSoloScale]?.name || "")}
             onNoteClick={handleNoteClick}
           />
         </section>
@@ -273,7 +283,7 @@ export default function App() {
       <section style={{marginBottom:22}}>
         <Legend scaleNotes={scaleNotes} colorMode={colorMode}
           showSolo={showSoloLayer}
-          soloScaleName={soloRoot + " " + (SCALES[soloScale] ? SCALES[soloScale].name : "")}
+          soloScaleName={soloRoot + " " + (SCALES[effectiveSoloScale]?.name || "")}
           chordName={activeChord ? activeChord.name : null}/>
       </section>
 
@@ -291,7 +301,7 @@ export default function App() {
           }}>{st.showSoloLayer ? "Solo ON" : "Solo OFF"}</button>
           <span style={{fontSize:12,color:"#939393",fontStyle:"italic"}}>
             {st.showSoloLayer
-              ? ("Гамма от корня аккорда: " + soloRoot)
+              ? ("Гамма от корня аккорда: " + soloRoot + " " + (SCALES[effectiveSoloScale]?.name || ""))
               : "Подсвечивает гамму для соло к текущему аккорду"}
           </span>
         </div>

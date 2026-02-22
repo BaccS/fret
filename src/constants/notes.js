@@ -68,3 +68,16 @@ export const TAG_COLORS = {
 };
 
 export const ALL_TAGS = ["Все","Поп","Рок","Минор","Блюз","Джаз","Фанк","Модал"];
+
+export const SCALE_FAMILIES = {
+  pentatonic:     { label:"Пентатоника",          maj:"major_penta",    min:"minor_penta",    dim:"minor_penta",    aug:"major_penta" },
+  natural:        { label:"Натуральная гамма",    maj:"major",          min:"natural_minor",  dim:"locrian",        aug:"lydian" },
+  blues:          { label:"Блюз",                 maj:"blues",          min:"blues",           dim:"blues",          aug:"blues" },
+  harmonic_minor: { label:"Гармонический минор",  maj:"harmonic_minor", min:"harmonic_minor",  dim:"harmonic_minor", aug:"harmonic_minor" },
+  melodic_minor:  { label:"Мелодический минор",   maj:"melodic_minor",  min:"melodic_minor",   dim:"melodic_minor",  aug:"melodic_minor" },
+  dorian:         { label:"Дорийский",            maj:"dorian",         min:"dorian",          dim:"dorian",         aug:"dorian" },
+  phrygian:       { label:"Фригийский",           maj:"phrygian",       min:"phrygian",        dim:"phrygian",       aug:"phrygian" },
+  lydian:         { label:"Лидийский",            maj:"lydian",         min:"lydian",          dim:"lydian",         aug:"lydian" },
+  mixolydian:     { label:"Миксолидийский",       maj:"mixolydian",     min:"mixolydian",      dim:"mixolydian",     aug:"mixolydian" },
+  locrian:        { label:"Локрийский",           maj:"locrian",        min:"locrian",         dim:"locrian",        aug:"locrian" },
+};

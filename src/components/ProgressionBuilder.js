@@ -1,13 +1,18 @@
 import { useState } from 'react';
 import { audioEngine } from '../engine/audioEngine';
+import { buildChord } from '../theory/harmony';
 import { COMMON_PROGRESSIONS, TAG_COLORS, ALL_TAGS, ROMAN } from '../constants/notes';
 import { MINI_BTN, NAV_BTN } from '../constants/styles';
 import MetronomeWidget from './MetronomeWidget';
 
+const EXT_CYCLE = [3, 7, 9, 11];
+const EXT_LABEL = { 3:"3", 7:"7", 9:"9", 11:"11" };
+
 function ChordSlot({ chord, index, isActive, currentBeat, beatsPerBar,
-                     onSelect, onRemove, onBarsChange,
+                     onSelect, onRemove, onBarsChange, onExtChange,
                      onDragStart, onDragOver, onDrop, isDragOver }) {
   const bars = chord.bars || 2;
+  const ext  = chord.ext || 3;
   const totalBeats = beatsPerBar * bars;
   const progress = (isActive && currentBeat != null) ? ((currentBeat % totalBeats) / totalBeats) : 0;
   return (
@@ -45,6 +50,15 @@ function ChordSlot({ chord, index, isActive, currentBeat, beatsPerBar,
           style={MINI_BTN}>+</button>
       </div>
       <span style={{fontFamily:"'DM Mono',monospace",fontSize:8,color:"#333"}}>тактов</span>
+      <button onClick={e=>{e.stopPropagation();onExtChange(index);}}
+        title="Расширение аккорда (клик для переключения)"
+        style={{
+          fontFamily:"'DM Mono',monospace",fontSize:9,
+          color:ext > 3 ? "#8a7a40" : "#444",
+          background:ext > 3 ? "#1a1800" : "#1a1a1a",
+          border:"1px solid "+(ext > 3 ? "#3a3420" : "#2a2a2a"),
+          borderRadius:4,padding:"1px 6px",cursor:"pointer",marginTop:2,
+        }}>{EXT_LABEL[ext] || ext}</button>
       <button onClick={e=>{e.stopPropagation();onRemove(index);}} style={{
         position:"absolute",top:-6,right:-6,width:16,height:16,
         background:"#2a2a2a",border:"1px solid #3a3a3a",borderRadius:"50%",
@@ -70,6 +84,17 @@ export default function ProgressionBuilder({ harmony, progression, onChange, cur
     const next = progression.map((c, idx) => idx === i ? {...c, bars} : c);
     if (i === 0 && allSame) onChange(next.map(c => ({...c, bars})));
     else onChange(next);
+  };
+
+  const handleExtChange = (i) => {
+    const chord = progression[i];
+    const current = chord.ext || 3;
+    const nextExt = EXT_CYCLE[(EXT_CYCLE.indexOf(current) + 1) % EXT_CYCLE.length];
+    const rebuilt = buildChord(chord.root, chord.type, nextExt, chord.degree, chord.idx);
+    const next = progression.map((c, idx) =>
+      idx === i ? { ...rebuilt, bars: chord.bars } : c
+    );
+    onChange(next);
   };
 
   const handleDragStart = (i) => setDragFrom(i);
@@ -156,6 +181,7 @@ export default function ProgressionBuilder({ harmony, progression, onChange, cur
             onSelect={onStepChange}
             onRemove={removeChord}
             onBarsChange={handleBarsChange}
+            onExtChange={handleExtChange}
             onDragStart={handleDragStart}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
