@@ -109,7 +109,7 @@ export default function Fretboard({ scaleNotes, chordNotes, chordRoot, soloNotes
               stroke={"rgba(210,185,120,"+(0.55+(5-s)*0.06)+")"}
               strokeWidth={s<2?2.8:s<4?2:1.4}/>
           ))}
-          {[0,3,5,7,9,12,15].map(f=>(
+          {[0,3,5,7,9,12,15,17].map(f=>(
             <text key={f} x={f===0?PL-28:PL+(f-0.5)*fw} y={H-6}
               textAnchor="middle" fill="#939393" fontSize={12} fontFamily="'DM Mono',monospace">{f}</text>
           ))}

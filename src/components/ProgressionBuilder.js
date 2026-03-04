@@ -141,11 +141,11 @@ export default function ProgressionBuilder({ harmony, progression, onChange, cur
           <span>
             <button onClick={onPlayToggle} style={{
               background:isPlaying?"#e8b84b":"#1a1a1a",
-              border:"1px solid "+(isPlaying?"#e8b84b":"#333"),
+              border:"1px solid #e8b84b",
               borderRadius:6,padding:"5px 14px",cursor:"pointer",
               fontFamily:"'DM Mono',monospace",fontSize:11,
-              color:isPlaying?"#0a0a0a":"#888",marginRight:6,
-            }}>{isPlaying ? "Стоп" : "Авто"}</button>
+              color:isPlaying?"#0a0a0a":"#e8b84b",marginRight:6,
+            }}>{isPlaying ? "Стоп" : "СТАРТ"}</button>
             {!isPlaying && progression.length > 1 && (
               <span>
                 <button onClick={() => onStepChange(((currentStep||0)-1+progression.length)%progression.length)}

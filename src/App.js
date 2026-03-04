@@ -20,7 +20,7 @@ const DEFAULT_STATE = {
 };
 
 export default function App() {
-  const [st, set]               = useLocalStorage('settings', DEFAULT_STATE);
+  const [st, set, stRestoreCompleted]               = useLocalStorage('settings', DEFAULT_STATE);
   const [isMuted, setIsMuted]   = useLocalStorage('muted', false);
   const [volume, setVolume]     = useLocalStorage('volume', 0.65);
   const [bpm, setBpm]           = useLocalStorage('bpm', 90);
@@ -50,6 +50,7 @@ export default function App() {
   // Восстанавливаем прогрессию из localStorage при первом рендере
   const restoredRef = useRef(false);
   useEffect(() => {
+    if(!stRestoreCompleted) return;
     if (restoredRef.current) return;
     restoredRef.current = true;
     const sp = savedProgression;
@@ -69,7 +70,7 @@ export default function App() {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [stRestoreCompleted]);
 
   // Синхронизируем прогрессию в localStorage при изменениях
   useEffect(() => {

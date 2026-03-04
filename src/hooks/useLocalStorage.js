@@ -4,10 +4,12 @@ const STORAGE_PREFIX = 'fret_';
 
 export function useLocalStorage(key, defaultValue) {
   const storageKey = STORAGE_PREFIX + key;
+  const [restoreCompleted, setRestoreCompleted] = useState(false);
 
   const [value, setValue] = useState(() => {
     try {
       const stored = localStorage.getItem(storageKey);
+      setRestoreCompleted(true);
       if (stored === null) return defaultValue;
       const parsed = JSON.parse(stored);
       if (typeof defaultValue === 'object' && defaultValue !== null && !Array.isArray(defaultValue)) {
@@ -27,5 +29,5 @@ export function useLocalStorage(key, defaultValue) {
     }
   }, [storageKey, value]);
 
-  return [value, setValue];
+  return [value, setValue, restoreCompleted];
 }
