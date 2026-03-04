@@ -1,4 +1,4 @@
-import { NOTES, SCALES, CHORD_DEGREES, CHORD_INT, ROMAN, SCALE_FAMILIES } from '../constants/notes';
+import { NOTES, SCALES, CHORD_DEGREES, CHORD_INT, ROMAN, SCALE_FAMILIES, CHORD_MOD_INT, MOD_SFX } from '../constants/notes';
 
 export const ni = (n) => NOTES.indexOf(n);
 
@@ -14,12 +14,20 @@ const sfxMap = {
   aug: { 3:"+", 7:"+7", 9:"+9", 11:"+11" },
 };
 
-export const buildChord = (chordRoot, type, ext, degree, idx) => {
+export const buildChord = (chordRoot, type, ext, degree, idx, mod = null) => {
   const e = ext || 3;
-  const cInt = (CHORD_INT[type] && CHORD_INT[type][e]) || (CHORD_INT[type] && CHORD_INT[type][3]) || [0,4,7];
+  let cInt, sfx;
+  if (mod && CHORD_MOD_INT[mod]) {
+    const modInts = CHORD_MOD_INT[mod];
+    const validExt = modInts[e] ? e : 3;
+    cInt = modInts[validExt] || [0,4,7];
+    sfx = (MOD_SFX[mod] && MOD_SFX[mod][validExt]) || mod;
+  } else {
+    cInt = (CHORD_INT[type]?.[e]) || (CHORD_INT[type]?.[3]) || [0,4,7];
+    sfx = sfxMap[type]?.[e] || "";
+  }
   const notes = cInt.map(ci => NOTES[(ni(chordRoot)+ci)%12]);
-  const sfx = (sfxMap[type] && sfxMap[type][e]) || "";
-  return { degree, root: chordRoot, type, name: chordRoot + sfx, notes, idx, ext: e };
+  return { degree, root: chordRoot, type, name: chordRoot + sfx, notes, idx, ext: e, mod: mod || null };
 };
 
 export const getHarmony = (root, key, ext) => {

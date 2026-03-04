@@ -22,7 +22,7 @@ export default function Controls({ st, set }) {
         </div>
       </div>
       <div>
-        <Lbl>Гамма</Lbl>
+        <Lbl>Scale</Lbl>
         <select value={st.scaleKey} onChange={e => upd("scaleKey",e.target.value)}
           style={{background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:8,
             color:"#e0e0e0",padding:"8px 12px",fontFamily:"'DM Mono',monospace",
@@ -33,18 +33,18 @@ export default function Controls({ st, set }) {
         </select>
       </div>
       <div>
-        <Lbl>Аккорды</Lbl>
-        <Seg value={st.chordExt} options={[[3,"Трезв."],[7,"7"],[9,"9"],[11,"11"]]}
+        <Lbl>Chords</Lbl>
+        <Seg value={st.chordExt} options={[[3,"Triad"],[7,"7"],[9,"9"],[11,"11"]]}
           onChange={v => upd("chordExt",v)}/>
       </div>
       <div>
-        <Lbl>Цвет нот</Lbl>
+        <Lbl>Note Colors</Lbl>
         <Seg value={st.colorMode} options={[["chromatic","C-B"],["scale","I-VII"]]}
           onChange={v => upd("colorMode",v)}/>
       </div>
       <div>
-        <Lbl>Подписи</Lbl>
-        <Seg value={st.labelMode} options={[["note","Нота"],["degree","Ступень"],["both","Оба"]]}
+        <Lbl>Labels</Lbl>
+        <Seg value={st.labelMode} options={[["note","Note"],["degree","Degree"],["both","Both"]]}
           onChange={v => upd("labelMode",v)}/>
       </div>
     </div>

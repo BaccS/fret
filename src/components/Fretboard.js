@@ -8,7 +8,8 @@ function FbNote({ note, x, y, r, scaleNotes, chordNotes, chordRoot, soloNotes, c
   const inSolo  = soloNotes.length > 0 && soloNotes.includes(note);
   const isRoot  = inChord && note === chordRoot;
 
-  if (!inScale && !inSolo) return null;
+  const chordOnly = inChord && !inScale && !inSolo;
+  if (!inScale && !inSolo && !inChord) return null;
 
   const scCol = inScale ? noteColor(note, colorMode, scaleNotes) : null;
   const sIdx  = scaleNotes.indexOf(note);
@@ -19,7 +20,7 @@ function FbNote({ note, x, y, r, scaleNotes, chordNotes, chordRoot, soloNotes, c
   const showScale = inScale;
   const showSolo  = inSolo && showSoloLayer;
   const split     = showScale && showSolo;
-  const leftColor = scCol || "#939393";
+  const leftColor = chordOnly ? "#2dd4bf" : scCol || "#939393";
 
   const handleClick = () => {
     if (onNoteClick) onNoteClick(string, fret);
@@ -41,6 +42,9 @@ function FbNote({ note, x, y, r, scaleNotes, chordNotes, chordRoot, soloNotes, c
           <path d={"M"+x+","+(y-r)+" A"+r+","+r+",0,0,1,"+x+","+(y+r)+" Z"} fill={SOLO_COLOR} />
           <circle cx={x} cy={y} r={r} fill="none" stroke="#0a0a0a" strokeWidth="1.5"/>
         </g>
+      ) : chordOnly ? (
+        <circle cx={x} cy={y} r={r} fill={leftColor} opacity="0.75"
+          style={{filter:"drop-shadow(0 0 4px #2dd4bf44)"}} />
       ) : showScale ? (
         <circle cx={x} cy={y} r={r} fill={leftColor} />
       ) : (

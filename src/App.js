@@ -29,7 +29,7 @@ export default function App() {
 
   // Прогрессия — сохраняем как индексы ступеней + привязка к тоника/гамма
   const [savedProgression, setSavedProgression] = useLocalStorage('progression', {
-    degrees: [], bars: [], exts: [], root: null, scaleKey: null, chordExt: null,
+    degrees: [], bars: [], exts: [], mods: [], root: null, scaleKey: null, chordExt: null,
   });
 
   const [activeSource, setActiveSource]       = useState(null);
@@ -59,8 +59,9 @@ export default function App() {
         const baseChord = harmony[di];
         if (!baseChord) return null;
         const chordExt_i = sp.exts?.[i] || sp.chordExt || chordExt;
-        if (chordExt_i !== chordExt) {
-          return { ...buildChord(baseChord.root, baseChord.type, chordExt_i, baseChord.degree, baseChord.idx), bars: sp.bars[i] || 2 };
+        const mod_i = sp.mods?.[i] || null;
+        if (chordExt_i !== chordExt || mod_i) {
+          return { ...buildChord(baseChord.root, baseChord.type, chordExt_i, baseChord.degree, baseChord.idx, mod_i), bars: sp.bars[i] || 2 };
         }
         return { ...baseChord, bars: sp.bars[i] || 2 };
       }).filter(Boolean);
@@ -78,9 +79,10 @@ export default function App() {
       const degrees = progression.map(c => c.idx);
       const bars = progression.map(c => c.bars || 2);
       const exts = progression.map(c => c.ext || chordExt);
-      setSavedProgression({ degrees, bars, exts, root, scaleKey, chordExt });
+      const mods = progression.map(c => c.mod || null);
+      setSavedProgression({ degrees, bars, exts, mods, root, scaleKey, chordExt });
     } else {
-      setSavedProgression({ degrees: [], bars: [], exts: [], root: null, scaleKey: null, chordExt: null });
+      setSavedProgression({ degrees: [], bars: [], exts: [], mods: [], root: null, scaleKey: null, chordExt: null });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progression, root, scaleKey, chordExt]);
@@ -302,8 +304,8 @@ export default function App() {
           }}>{st.showSoloLayer ? "Solo ON" : "Solo OFF"}</button>
           <span style={{fontSize:12,color:"#939393",fontStyle:"italic"}}>
             {st.showSoloLayer
-              ? ("Гамма от корня аккорда: " + soloRoot + " " + (SCALES[effectiveSoloScale]?.name || ""))
-              : "Подсвечивает гамму для соло к текущему аккорду"}
+              ? ("Scale from chord root: " + soloRoot + " " + (SCALES[effectiveSoloScale]?.name || ""))
+              : "Highlights the scale for soloing over the current chord"}
           </span>
         </div>
         {st.showSoloLayer && <SoloControls st={st} set={set}/>}
@@ -312,11 +314,11 @@ export default function App() {
       {/* HARMONY */}
       <section style={{marginBottom:22}}>
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10,flexWrap:"wrap"}}>
-          <Lbl>Гармония: {root} {SCALES[scaleKey] ? SCALES[scaleKey].name : ""}</Lbl>
+          <Lbl>Harmony: {root} {SCALES[scaleKey] ? SCALES[scaleKey].name : ""}</Lbl>
           <span style={{fontSize:12,color:"#939393",fontStyle:"italic"}}>
             {activeSource === "harmony" && activeChord
-              ? (activeChord.name + " — нажми снова чтобы снять")
-              : "Нажми аккорд для подсветки или добавь в прогрессию"}
+              ? (activeChord.name + " — click again to remove")
+              : "Click a chord to highlight or add to progression"}
           </span>
         </div>
         <HarmonyPanel
@@ -334,7 +336,6 @@ export default function App() {
           progression={progression}
           onChange={(p) => {
             setProgression(p);
-            setCurrentStep(0);
             setActiveSource(p.length > 0 ? "progression" : null);
           }}
           currentStep={activeSource === "progression" ? currentStep : null}
@@ -353,10 +354,10 @@ export default function App() {
 
       {/* HINT */}
       <div style={{fontSize:12,color:"#939393",lineHeight:1.8}}>
-        <span style={{color:"#e8b84b"}}>Совет:</span>
-        {" "}Кликай по нотам на грифе чтобы слышать их высоту.
-        Кликай по аккордам в гармонии или прогрессии чтобы слышать их звучание.
-        Авто-плей переключает аккорды каждые 1.8 сек.
+        <span style={{color:"#e8b84b"}}>Tip:</span>
+        {" "}Click on the frets to hear the notes.
+        Click on chords in the harmony or progression to hear their sound.
+        Auto-play switches chords every 1.8 seconds.
       </div>
     </div>
   );
