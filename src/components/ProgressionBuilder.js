@@ -139,7 +139,7 @@ function ChordSlot({ chord, index, isActive, currentBeat, beatsPerBar,
         background:"#2a2a2a",border:"1px solid #3a3a3a",borderRadius:"50%",
         cursor:"pointer",fontSize:9,color:"#666",
         display:"flex",alignItems:"center",justifyContent:"center",padding:0,
-      }} title="Дублировать аккорд">+</button>
+      }} title="Clone chord">+</button>
       <button onClick={e=>{e.stopPropagation();onRemove(index);}} style={{
         position:"absolute",top:-6,right:-6,width:16,height:16,
         background:"#2a2a2a",border:"1px solid #3a3a3a",borderRadius:"50%",
@@ -152,7 +152,7 @@ function ChordSlot({ chord, index, isActive, currentBeat, beatsPerBar,
 
 export default function ProgressionBuilder({ harmony, progression, onChange, currentStep, onStepChange, isPlaying, onPlayToggle, bpm, onBpmChange, beatsPerBar, onBeatsChange, currentBeat, chordRepeat, onChordRepeatChange }) {
   const [tab, setTab]           = useState("presets");
-  const [filterTag, setFilterTag] = useState("Все");
+  const [filterTag, setFilterTag] = useState("All");
   const [dragFrom, setDragFrom] = useState(null);
   const [dragOver, setDragOver] = useState(null);
   const [popup, setPopup] = useState(null);

@@ -87,7 +87,7 @@ export default function MetronomeWidget({ bpm, onBpmChange, beatsPerBar, onBeats
       </div>
 
       <div style={{display:"flex",alignItems:"center",gap:5}}>
-        <span style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:"#939393"}}>Аккорд</span>
+        <span style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:"#939393"}}>Chord</span>
         {REPEATS.map(([r, sym, label]) => (
           <button key={r} onClick={() => onChordRepeatChange(r)} title={label} style={{
             width:28, height:28, borderRadius:5, cursor:"pointer",
