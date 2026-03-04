@@ -232,7 +232,7 @@ export default function App() {
         display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
         <h1 style={{fontFamily:"'Unbounded',sans-serif",fontSize:20,fontWeight:900,
           color:"#e8b84b",letterSpacing:-0.5}}>FRETBOARD</h1>
-        <span style={{fontSize:12,color:"#3a3a3a",letterSpacing:3}}>NAVIGATOR</span>
+        <span style={{fontSize:12,color:"#3a3a3a",letterSpacing:3}}>creativity</span>
         <span style={{fontSize:11,color:"#939393"}}>
           {root} {SCALES[scaleKey] ? SCALES[scaleKey].name : ""}
           {activeChord ? <span style={{color:"#2dd4bf"}}> · {activeChord.name}</span> : null}
@@ -265,7 +265,7 @@ export default function App() {
           scaleNotes={scaleNotes} chordNotes={chordNotes} chordRoot={chordRoot}
           soloNotes={overlaySolo ? soloNotes : []}
           colorMode={colorMode} labelMode={labelMode} showSoloLayer={overlaySolo}
-          label={overlaySolo ? "Основная гамма + соло" : null}
+          label={overlaySolo ? "Main scale + solo" : null}
           onNoteClick={handleNoteClick}
         />
       </section>
@@ -276,7 +276,7 @@ export default function App() {
           <Fretboard
             scaleNotes={soloNotes} chordNotes={chordNotes} chordRoot={chordRoot}
             soloNotes={[]} colorMode={colorMode} labelMode={labelMode} showSoloLayer={false}
-            label={"Соло-гамма: " + soloRoot + " " + (SCALES[effectiveSoloScale]?.name || "")}
+            label={"Solo scale: " + soloRoot + " " + (SCALES[effectiveSoloScale]?.name || "")}
             onNoteClick={handleNoteClick}
           />
         </section>

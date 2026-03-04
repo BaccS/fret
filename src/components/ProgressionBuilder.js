@@ -239,7 +239,7 @@ export default function ProgressionBuilder({ harmony, progression, onChange, cur
     if (chords[0]) audioEngine.playChord(chords[0].notes);
   };
 
-  const filtered = filterTag === "Все"
+  const filtered = filterTag === "All"
     ? COMMON_PROGRESSIONS
     : COMMON_PROGRESSIONS.filter(p => p.tag === filterTag);
 
@@ -251,7 +251,7 @@ export default function ProgressionBuilder({ harmony, progression, onChange, cur
         chordRepeat={chordRepeat} onChordRepeatChange={onChordRepeatChange}/>
       <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:14,flexWrap:"wrap"}}>
         <span style={{fontFamily:"'DM Mono',monospace",fontSize:12,fontWeight:600,
-          color:"#555",letterSpacing:1,textTransform:"uppercase"}}>Прогрессия</span>
+          color:"#555",letterSpacing:1,textTransform:"uppercase"}}>Progression</span>
         {progression.length > 0 && (
           <span>
             <button onClick={onPlayToggle} style={{
@@ -260,7 +260,7 @@ export default function ProgressionBuilder({ harmony, progression, onChange, cur
               borderRadius:6,padding:"5px 14px",cursor:"pointer",
               fontFamily:"'DM Mono',monospace",fontSize:11,
               color:isPlaying?"#0a0a0a":"#e8b84b",marginRight:6,
-            }}>{isPlaying ? "Стоп" : "СТАРТ"}</button>
+            }}>{isPlaying ? "Stop" : "Start"}</button>
             {!isPlaying && progression.length > 1 && (
               <span>
                 <button onClick={() => onStepChange(((currentStep||0)-1+progression.length)%progression.length)}
@@ -273,7 +273,7 @@ export default function ProgressionBuilder({ harmony, progression, onChange, cur
               background:"none",border:"1px solid #222",borderRadius:6,
               padding:"5px 10px",cursor:"pointer",fontFamily:"'DM Mono',monospace",
               fontSize:12,color:"#939393",marginLeft:6,
-            }}>Очистить</button>
+            }}>Clear</button>
           </span>
         )}
       </div>
@@ -409,7 +409,7 @@ export default function ProgressionBuilder({ harmony, progression, onChange, cur
       {tab === "manual" && (
         <div>
           <div style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:"#939393",marginBottom:8}}>
-            Нажми аккорд чтобы добавить в прогрессию:
+            Click a chord to add it to the progression:
           </div>
           <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
             {harmony.map((chord, i) => (

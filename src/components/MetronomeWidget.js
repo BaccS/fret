@@ -17,10 +17,10 @@ export default function MetronomeWidget({ bpm, onBpmChange, beatsPerBar, onBeats
   };
 
   const REPEATS = [
-    [1, "\u{1D15D}",  "Целая — 1 раз за N тактов"],
-    [2, "\u{1D15E}", "Половинная — 2 раза за такт"],
-    [4, "♩",  "Четверть — на каждой доле"],
-    [8, "♪",  "Восьмая — дважды на каждой доле"],
+    [1, "\u{1D15D}",  "Whole — 1 per N bars"],
+    [2, "\u{1D15E}", "Half — 2 times per bar"],
+    [4, "♩",  "Quarter — each part of beat"],
+    [8, "♪",  "Eight — twice per beat part"],
   ];
 
   return (
@@ -29,7 +29,7 @@ export default function MetronomeWidget({ bpm, onBpmChange, beatsPerBar, onBeats
       border:"1px solid #1e1e1e",marginBottom:12}}>
 
       <span style={{fontFamily:"'DM Mono',monospace",fontSize:12,fontWeight:600,
-        color:"#555",letterSpacing:1,textTransform:"uppercase"}}>Метроном</span>
+        color:"#555",letterSpacing:1,textTransform:"uppercase"}}>Metronome</span>
 
       <div style={{display:"flex",gap:5,alignItems:"center"}}>
         {Array.from({length: beatsPerBar}, (_, i) => {

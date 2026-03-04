@@ -7,7 +7,7 @@ export default function SoloControls({ st, set }) {
   return (
     <div style={{display:"flex",flexWrap:"wrap",gap:16,alignItems:"flex-start"}}>
       <div>
-        <Lbl>Гамма соло</Lbl>
+        <Lbl>Solo scale</Lbl>
         <select value={st.soloFamily} onChange={e => upd("soloFamily",e.target.value)}
           style={{background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:8,
             color:"#e0e0e0",padding:"8px 12px",fontFamily:"'DM Mono',monospace",
@@ -18,9 +18,9 @@ export default function SoloControls({ st, set }) {
         </select>
       </div>
       <div>
-        <Lbl>Отображение</Lbl>
+        <Lbl>Display</Lbl>
         <Seg value={st.soloLayerMode}
-          options={[["overlay","Слой поверх"],["separate","Отдельный гриф"]]}
+          options={[["overlay","Overlay"],["separate","Separate fretboard"]]}
           onChange={v => upd("soloLayerMode",v)}/>
       </div>
     </div>
