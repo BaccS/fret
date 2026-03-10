@@ -19,8 +19,41 @@ const DEFAULT_STATE = {
   showSoloLayer:false, soloFamily:"pentatonic", soloLayerMode:"overlay",
 };
 
+function restoreProgression(settings, savedProg) {
+  const { root, scaleKey, chordExt } = settings;
+  const sp = savedProg;
+  if (!sp || !sp.degrees || sp.degrees.length === 0) return [];
+  if (sp.root !== root || sp.scaleKey !== scaleKey) return [];
+  const harmony = getHarmony(root, scaleKey, chordExt);
+  const restored = sp.degrees.map((di, i) => {
+    const baseChord = harmony[di];
+    if (!baseChord) return null;
+    const chordExt_i = sp.exts?.[i] || sp.chordExt || chordExt;
+    const mod_i = sp.mods?.[i] || null;
+    const pos_i = sp.positions?.[i] || 0;
+    const style_i = sp.playStyles?.[i] || "sustain";
+    if (chordExt_i !== chordExt || mod_i) {
+      return { ...buildChord(baseChord.root, baseChord.type, chordExt_i, baseChord.degree, baseChord.idx, mod_i), bars: sp.bars[i] || 2, position: pos_i, playStyle: style_i };
+    }
+    return { ...baseChord, bars: sp.bars[i] || 2, position: pos_i, playStyle: style_i };
+  }).filter(Boolean);
+  return restored;
+}
+
+function readStorage(key, fallback) {
+  try {
+    const raw = localStorage.getItem('fret_' + key);
+    if (raw === null) return fallback;
+    const parsed = JSON.parse(raw);
+    if (typeof fallback === 'object' && fallback !== null && !Array.isArray(fallback)) {
+      return { ...fallback, ...parsed };
+    }
+    return parsed;
+  } catch { return fallback; }
+}
+
 export default function App() {
-  const [st, set, stRestoreCompleted]               = useLocalStorage('settings', DEFAULT_STATE);
+  const [st, set]               = useLocalStorage('settings', DEFAULT_STATE);
   const [isMuted, setIsMuted]   = useLocalStorage('muted', false);
   const [volume, setVolume]     = useLocalStorage('volume', 0.65);
   const [bpm, setBpm]           = useLocalStorage('bpm', 90);
@@ -28,15 +61,20 @@ export default function App() {
   const [chordRepeat, setChordRepeat] = useLocalStorage('chordRepeat', 1);
 
   // Прогрессия — сохраняем как индексы ступеней + привязка к тоника/гамма
-  const [savedProgression, setSavedProgression] = useLocalStorage('progression', {
-    degrees: [], bars: [], exts: [], mods: [], root: null, scaleKey: null, chordExt: null,
+  const [, setSavedProgression] = useLocalStorage('progression', {
+    degrees: [], bars: [], exts: [], mods: [], positions: [], playStyles: [], root: null, scaleKey: null, chordExt: null,
   });
 
-  const [activeSource, setActiveSource]       = useState(null);
+  const initSettings = readStorage('settings', DEFAULT_STATE);
+  const initSavedProg = readStorage('progression', { degrees:[], bars:[], exts:[], mods:[], positions:[], playStyles:[], root:null, scaleKey:null, chordExt:null });
+  const initProgression = restoreProgression(initSettings, initSavedProg);
+
+  const [activeSource, setActiveSource]       = useState(initProgression.length > 0 ? "progression" : null);
   const [harmonySelectedIdx, setHarmonyIdx]   = useState(null);
-  const [progression, setProgression]         = useState([]);
+  const [progression, setProgression]         = useState(initProgression);
   const [currentStep, setCurrentStep]         = useState(0);
   const [isPlaying, setIsPlaying]             = useState(false);
+  const [isMetronomeOnly, setIsMetronomeOnly] = useState(false);
   const [currentBeat, setCurrentBeat]         = useState(null);
   const progressionRef = useRef([]);
   const currentStepRef = useRef(0);
@@ -47,32 +85,6 @@ export default function App() {
   const scaleNotes = useMemo(() => getScaleNotes(root, scaleKey), [root, scaleKey]);
   const harmony    = useMemo(() => getHarmony(root, scaleKey, chordExt), [root, scaleKey, chordExt]);
 
-  // Восстанавливаем прогрессию из localStorage при первом рендере
-  const restoredRef = useRef(false);
-  useEffect(() => {
-    if(!stRestoreCompleted) return;
-    if (restoredRef.current) return;
-    restoredRef.current = true;
-    const sp = savedProgression;
-    if (sp.degrees.length > 0 && sp.root === root && sp.scaleKey === scaleKey) {
-      const restored = sp.degrees.map((di, i) => {
-        const baseChord = harmony[di];
-        if (!baseChord) return null;
-        const chordExt_i = sp.exts?.[i] || sp.chordExt || chordExt;
-        const mod_i = sp.mods?.[i] || null;
-        if (chordExt_i !== chordExt || mod_i) {
-          return { ...buildChord(baseChord.root, baseChord.type, chordExt_i, baseChord.degree, baseChord.idx, mod_i), bars: sp.bars[i] || 2 };
-        }
-        return { ...baseChord, bars: sp.bars[i] || 2 };
-      }).filter(Boolean);
-      if (restored.length > 0) {
-        setProgression(restored);
-        setActiveSource("progression");
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stRestoreCompleted]);
-
   // Синхронизируем прогрессию в localStorage при изменениях
   useEffect(() => {
     if (progression.length > 0) {
@@ -80,9 +92,11 @@ export default function App() {
       const bars = progression.map(c => c.bars || 2);
       const exts = progression.map(c => c.ext || chordExt);
       const mods = progression.map(c => c.mod || null);
-      setSavedProgression({ degrees, bars, exts, mods, root, scaleKey, chordExt });
+      const positions = progression.map(c => c.position || 0);
+      const playStyles = progression.map(c => c.playStyle || "sustain");
+      setSavedProgression({ degrees, bars, exts, mods, positions, playStyles, root, scaleKey, chordExt });
     } else {
-      setSavedProgression({ degrees: [], bars: [], exts: [], mods: [], root: null, scaleKey: null, chordExt: null });
+      setSavedProgression({ degrees: [], bars: [], exts: [], mods: [], positions: [], playStyles: [], root: null, scaleKey: null, chordExt: null });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progression, root, scaleKey, chordExt]);
@@ -124,7 +138,7 @@ export default function App() {
     setCurrentStep(i);
     setIsPlaying(false);
     const chord = progression[i];
-    if (chord) audioEngine.playChord(chord.notes);
+    if (chord) audioEngine.playChord(chord.notes, chord.position || 0, chord.playStyle || "sustain");
   }, [progression]);
 
   const handleNoteClick = useCallback((string, fret) => {
@@ -156,9 +170,35 @@ export default function App() {
   useEffect(() => { progressionRef.current = progression; }, [progression]);
   useEffect(() => { currentStepRef.current = currentStep; }, [currentStep]);
 
-  // Autoplay
+  // Standalone metronome (no progression)
+  useEffect(() => {
+    if (isMetronomeOnly) {
+      metronomeEngine.bpm         = bpm;
+      metronomeEngine.beatsPerBar = beatsPerBar;
+      metronomeEngine.chordRepeat = chordRepeat;
+      metronomeEngine.onBeat       = (beat) => setCurrentBeat(beat);
+      metronomeEngine.onChordPlay  = null;
+      metronomeEngine.onChordChange = null;
+      metronomeEngine.start(9999);
+    } else {
+      if (!isPlaying) {
+        metronomeEngine.stop();
+        setCurrentBeat(null);
+      }
+    }
+    return () => {
+      if (isMetronomeOnly) {
+        metronomeEngine.stop();
+        setCurrentBeat(null);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMetronomeOnly]);
+
+  // Autoplay (progression)
   useEffect(() => {
     if (isPlaying && progression.length > 0) {
+      setIsMetronomeOnly(false);
       setActiveSource("progression");
 
       metronomeEngine.bpm          = bpm;
@@ -170,7 +210,7 @@ export default function App() {
       metronomeEngine.onChordPlay = () => {
         const prog  = progressionRef.current;
         const chord = prog[metronomeEngine._currentIdx ?? 0];
-        if (chord) audioEngine.playChord(chord.notes);
+        if (chord) audioEngine.playChord(chord.notes, chord.position || 0, chord.playStyle || "sustain");
       };
 
       metronomeEngine.onChordChange = () => {
@@ -187,11 +227,19 @@ export default function App() {
       const firstBars = progression[currentStep]?.bars || 2;
       metronomeEngine.start(firstBars);
     } else {
-      metronomeEngine.stop();
-      metronomeEngine._currentIdx = 0;
-      setCurrentBeat(null);
+      if (!isMetronomeOnly) {
+        metronomeEngine.stop();
+        metronomeEngine._currentIdx = 0;
+        setCurrentBeat(null);
+      }
     }
-    return () => { metronomeEngine.stop(); metronomeEngine._currentIdx = 0; setCurrentBeat(null); };
+    return () => {
+      if (!isMetronomeOnly) {
+        metronomeEngine.stop();
+        metronomeEngine._currentIdx = 0;
+        setCurrentBeat(null);
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlaying]);
 
@@ -201,10 +249,14 @@ export default function App() {
     metronomeEngine.chordRepeat = chordRepeat;
   }, [bpm, beatsPerBar, chordRepeat]);
 
-  // Reset on key/scale change
+  // Reset on key/scale change (compare with previous values, not mount flag)
+  const prevKeyRef = useRef({ root, scaleKey });
   useEffect(() => {
+    const prev = prevKeyRef.current;
+    if (prev.root === root && prev.scaleKey === scaleKey) return;
+    prevKeyRef.current = { root, scaleKey };
     setProgression([]); setCurrentStep(0);
-    setIsPlaying(false); setActiveSource(null); setHarmonyIdx(null);
+    setIsPlaying(false); setIsMetronomeOnly(false); setActiveSource(null); setHarmonyIdx(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [root, scaleKey]);
 
@@ -338,7 +390,7 @@ export default function App() {
             setProgression(p);
             setActiveSource(p.length > 0 ? "progression" : null);
           }}
-          currentStep={activeSource === "progression" ? currentStep : null}
+          currentStep={activeSource === "progression" && isPlaying ? currentStep : null}
           onStepChange={handleProgressionStep}
           isPlaying={isPlaying}
           onPlayToggle={() => setIsPlaying(p => !p)}
@@ -349,6 +401,8 @@ export default function App() {
           currentBeat={currentBeat}
           chordRepeat={chordRepeat}
           onChordRepeatChange={v => { setChordRepeat(v); metronomeEngine.chordRepeat = v; }}
+          isMetronomeOnly={isMetronomeOnly}
+          onMetronomeToggle={() => { setIsMetronomeOnly(p => !p); setIsPlaying(false); }}
         />
       </section>
 

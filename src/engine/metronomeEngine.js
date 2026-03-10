@@ -44,12 +44,17 @@ class MetronomeEngine {
     const beatsPerBar   = this.beatsPerBar;
     const beatsPerChord = beatsPerBar * this._barsPerChord;
 
-    const useHalf     = this.chordRepeat === 8;
-    const subdivide   = useHalf ? 2 : 1;
-    const repeatEvery = Math.max(1,
-      Math.round((beatsPerBar / Math.min(this.chordRepeat, 4)) * subdivide)
-    );
+    // chordRepeat: 1=whole, 2=half, 4=quarter, 8=eighth, 16=sixteenth
+    // Subdivide the beat for 8th/16th chord repeats
+    const subdivide   = this.chordRepeat >= 16 ? 4 : this.chordRepeat >= 8 ? 2 : 1;
     const subSpb      = spb / subdivide;
+
+    // How often to trigger chord play (in sub-beats)
+    // Total sub-beats per bar = beatsPerBar * subdivide
+    // Desired plays per bar = chordRepeat (capped: 1=1/bar, 2=2/bar, 4=4/bar, 8=8/bar, 16=16/bar)
+    const subBeatsPerBar = beatsPerBar * subdivide;
+    const playsPerBar = Math.min(this.chordRepeat, subBeatsPerBar);
+    const repeatEvery = Math.max(1, Math.round(subBeatsPerBar / playsPerBar));
 
     while (this._nextTime < ctx.currentTime + 0.12) {
       const t            = this._nextTime;
@@ -59,16 +64,19 @@ class MetronomeEngine {
       const beatInChord  = fullBeat % beatsPerChord;
       const isFullBeat   = subBeat % subdivide === 0;
 
+      // Metronome click only on full beats
       if (isFullBeat) {
         this._click(t, beatInBar === 0);
       }
 
+      // Beat callback only on full beats
       if (isFullBeat && this.onBeat) {
         const ms = Math.max(0, (t - ctx.currentTime) * 1000);
         const b  = beatInBar;
         setTimeout(() => { if (this.onBeat) this.onBeat(b); }, ms);
       }
 
+      // Chord change on full beats at chord boundary
       if (isFullBeat && beatInChord === 0 && fullBeat > 0) {
         if (this.onChordChange) {
           const ms = Math.max(0, (t - ctx.currentTime) * 1000);
@@ -76,6 +84,7 @@ class MetronomeEngine {
         }
       }
 
+      // Chord play at repeat interval (sub-beat resolution)
       if (subBeat % repeatEvery === 0) {
         if (this.onChordPlay) {
           const isChangebeat = isFullBeat && beatInChord === 0 && fullBeat > 0;

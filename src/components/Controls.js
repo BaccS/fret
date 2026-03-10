@@ -8,7 +8,7 @@ export default function Controls({ st, set }) {
   return (
     <div style={{display:"flex",flexWrap:"wrap",gap:18,alignItems:"flex-start"}}>
       <div>
-        <Lbl>Тональность</Lbl>
+        <Lbl>Root</Lbl>
         <div style={{display:"flex",flexWrap:"wrap",gap:4,maxWidth:290}}>
           {ALL_ROOTS.map(n => (
             <button key={n} onClick={() => upd("root",n)} style={{

@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { MET_BTN } from '../constants/styles';
 
 export default function MetronomeWidget({ bpm, onBpmChange, beatsPerBar, onBeatsChange,
-                           isPlaying, currentBeat, chordRepeat, onChordRepeatChange }) {
+                           isPlaying, currentBeat, chordRepeat, onChordRepeatChange,
+                           isMetronomeOnly, onMetronomeToggle }) {
   const [inputBpm, setInputBpm] = useState(String(bpm));
 
   useEffect(() => { setInputBpm(String(bpm)); }, [bpm]);
@@ -17,10 +18,11 @@ export default function MetronomeWidget({ bpm, onBpmChange, beatsPerBar, onBeats
   };
 
   const REPEATS = [
-    [1, "\u{1D15D}",  "Whole — 1 per N bars"],
+    [1, "\u{1D15D}",  "Whole — 1 per bar"],
     [2, "\u{1D15E}", "Half — 2 times per bar"],
     [4, "♩",  "Quarter — each part of beat"],
-    [8, "♪",  "Eight — twice per beat part"],
+    [8, "♪",  "Eight — twice per beat"],
+    [16, "♬",  "Sixteen — four per beat"],
   ];
 
   return (
@@ -28,8 +30,12 @@ export default function MetronomeWidget({ bpm, onBpmChange, beatsPerBar, onBeats
       padding:"10px 14px",background:"#0d0d0d",borderRadius:10,
       border:"1px solid #1e1e1e",marginBottom:12}}>
 
-      <span style={{fontFamily:"'DM Mono',monospace",fontSize:12,fontWeight:600,
-        color:"#555",letterSpacing:1,textTransform:"uppercase"}}>Metronome</span>
+      <button onClick={onMetronomeToggle} style={{
+        background: isMetronomeOnly ? "#4a8a4a" : "#1a1a1a",
+        border: "1px solid #4a8a4a", borderRadius: 6, padding: "4px 10px", cursor: "pointer",
+        fontFamily: "'DM Mono',monospace", fontSize: 12, fontWeight: 600,
+        color: isMetronomeOnly ? "#0a0a0a" : "#4a8a4a", letterSpacing: 1,
+      }}>{isMetronomeOnly ? "■ Stop" : "▶ Metro"}</button>
 
       <div style={{display:"flex",gap:5,alignItems:"center"}}>
         {Array.from({length: beatsPerBar}, (_, i) => {
@@ -74,7 +80,7 @@ export default function MetronomeWidget({ bpm, onBpmChange, beatsPerBar, onBeats
       </div>
 
       <div style={{display:"flex",alignItems:"center",gap:5}}>
-        <span style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:"#939393"}}>Такт</span>
+        <span style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:"#939393"}}>Bar</span>
         {[[4,"4/4"],[3,"3/4"],[6,"6/8"]].map(([b, label]) => (
           <button key={b} onClick={() => onBeatsChange(b)} style={{
             padding:"3px 8px", borderRadius:5, cursor:"pointer",

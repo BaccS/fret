@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const STORAGE_PREFIX = 'fret_';
 
 export function useLocalStorage(key, defaultValue) {
   const storageKey = STORAGE_PREFIX + key;
-  const [restoreCompleted, setRestoreCompleted] = useState(false);
+  const restoredRef = useRef(false);
 
   const [value, setValue] = useState(() => {
     try {
+      restoredRef.current = true;
       const stored = localStorage.getItem(storageKey);
-      setRestoreCompleted(true);
       if (stored === null) return defaultValue;
       const parsed = JSON.parse(stored);
       if (typeof defaultValue === 'object' && defaultValue !== null && !Array.isArray(defaultValue)) {
@@ -20,6 +20,8 @@ export function useLocalStorage(key, defaultValue) {
       return defaultValue;
     }
   });
+
+  const [restoreCompleted] = useState(() => restoredRef.current);
 
   useEffect(() => {
     try {
