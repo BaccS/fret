@@ -12,6 +12,9 @@ import Controls from './components/Controls';
 import SoloControls from './components/SoloControls';
 import Legend from './components/Legend';
 import Lbl from './components/ui/Lbl';
+import ReactGA from 'react-ga4';
+
+ReactGA.initialize('G-267FDJVE20');
 
 const DEFAULT_STATE = {
   root:"A", scaleKey:"natural_minor", colorMode:"scale",
@@ -180,6 +183,11 @@ export default function App() {
       metronomeEngine.onChordPlay  = null;
       metronomeEngine.onChordChange = null;
       metronomeEngine.start(9999);
+      ReactGA.event({
+        category: 'User Interaction',
+        action: 'Metronome started',
+        label: 'Start metronome',
+      })
     } else {
       if (!isPlaying) {
         metronomeEngine.stop();
@@ -200,6 +208,11 @@ export default function App() {
     if (isPlaying && progression.length > 0) {
       setIsMetronomeOnly(false);
       setActiveSource("progression");
+      ReactGA.event({
+        category: 'User Interaction',
+        action: 'Progression started',
+        label: 'Start progression',
+      })
 
       metronomeEngine.bpm          = bpm;
       metronomeEngine.beatsPerBar  = beatsPerBar;
